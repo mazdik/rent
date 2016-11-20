@@ -1,0 +1,23 @@
+{
+    "sleep_delay": 3000,
+    "limit_images": 8,
+    "city": "ufa",
+    "category": "kvartiry",
+    "oper": "sdam",
+    "limit_pages": 0,
+    "pmin": 12000,
+    "pmax": 15000,
+    "with_images": 1,
+    "query": "не риелтор",
+    "exclude": "Агенство,Сдает собственник,Работаем с выездом",
+    "commission": 0,
+    "proxy": "",
+    "proxyuserpwd": "",
+    "user": 1,
+    "crop": 91,
+    "post_status": 1,
+    "post_user": 1,
+    "account_username": "gqdev@yandex.ru",
+    "account_password": "gqdev123",
+    "object_type": ""
+}

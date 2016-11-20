@@ -1,0 +1,16 @@
+{
+  "name": "avito_rent",
+  "version": "1.0.0",
+  "description": "avito rent",
+  "main": "none",
+  "dependencies": {
+    "chromedriver": "^2.25.1",
+    "log4js": "^1.0.1",
+    "phantomjs-prebuilt": "^2.1.13",
+    "selenium-webdriver": "^2.53.3"
+  },
+  "devDependencies": {},
+  "scripts": {},
+  "author": "Mazdik",
+  "license": "-"
+}

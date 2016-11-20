@@ -1,4 +1,4 @@
-# avito_rent
+# rent
 
 ## Quick start
 ```bash

@@ -200,8 +200,8 @@ function get_content_all() {
     });;
 }
 
-get_content_page('/ufa/kvartiry/2-k_kvartira_50_m_99_et._853831519')
+//get_content_page('/ufa/kvartiry/2-k_kvartira_50_m_99_et._853831519')
 
-//get_content_all();
+get_content_all();
 
 driver.quit();

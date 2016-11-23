@@ -1,84 +1,68 @@
 var mysql = require('mysql');
 
-var connectionPromise = new Promise(function(resolve, reject) {
-    var connection = mysql.createConnection({
-        host: 'localhost',
-        user: 'root',
-        password: 'vertrigo',
-        database: 'citybp'
-    });
-    connection.connect(function(err) {
-        if (err) {
-            console.error(err);
-            reject(err);
-        } else {
-            resolve(connection);
-        }
-    });
-
+var pool = mysql.createPool({
+    connectionLimit: 20,
+    host: 'localhost',
+    user: 'root',
+    password: 'vertrigo',
+    database: 'citybp'
 });
 
 module.exports = {
 
     isNotProcessed: function(href) {
-        return connectionPromise.then(function(connection) {
-            return new Promise(function(resolve, reject) {
+        let result = true;
+        return new Promise(function(resolve, reject) {
+            return pool.getConnection(function(err, connection) {
                 connection.query('select count(*) AS count from tbl_parser_links t where t.link=?', [href], function(err, rows, fields) {
                     if (err) return reject(err);
-
-                    resolve(rows[0].count);
-                });
+                    connection.release();
+                    result = (rows[0].count == 0) ? true : false;
+                    resolve(result);
+                })
             });
         });
     },
 
-    save_post: function() {
-        let post = {
-            alias: '123',
-            oper: 123,
-            realty: 123,
-            address: 'Hello MySQL',
-            price: 123,
-            textobj: '',
-            totalarea: 123,
-            phonenum: 123,
-            floor: 123,
-            floornum: 123,
-            area_id: 123,
-            status: 123,
-            author_id: 123,
-            payment: 123,
-            type: 123,
-            count_images: 123,
-            create_time: 123,
-            update_time: 123
-        };
-        return connectionPromise.then(function(connection) {
-            return new Promise(function(resolve, reject) {
-                isNotProcessed('sss').then(function(rows) {
-                        if (rows == 0) {
-                            let query = connection.query('INSERT INTO tbl_post SET ?', post, function(err, result) {
-                                if (err) throw err;
+    save_post: function(post) {
+        return new Promise(function(resolve, reject) {
+            return pool.getConnection(function(err, connection) {
+                connection.query('INSERT INTO tbl_post SET ?', post, function(err, result) {
+                    if (err) return reject(err);
+                    connection.release();
+                    resolve('inserted ' + result.affectedRows + ' rows');
+                });
+                //console.log(query.sql);
+            });
+        });
+    },
 
-                                console.log('inserted ' + result.affectedRows + ' rows');
-                                resolve();
-                            });
-                            //console.log(query.sql);
-                        }
-                    },
-                    function(error) {
-                        if (err) return reject(err);
+    save_post2: function(href, post) {
+        pool.getConnection(function(err, connection) {
+            let link_exist = 0;
+            connection.query('select count(*) AS count from tbl_parser_links t where t.link=?', [href], function(err, rows, fields) {
+                if (err) throw err;
+                link_exist = rows[0].count;
+                //console.log(rows[0].count + ' rows');
+                connection.release();
+            }).on('end', function() {
+                if (link_exist == 0) {
+                    let query = connection.query('INSERT INTO tbl_post SET ?', post, function(err, result) {
+                        if (err) throw err;
+                        connection.release();
+                        console.log('inserted ' + result.affectedRows + ' rows');
                     });
+                    //console.log(query.sql);
+                }
             });
         });
     },
 
     disconnect: function() {
-        return connectionPromise.then(function(connection) {
-            connection.end(function(err) {
-                console.error('error:' + err);
+        pool.getConnection(function(err, connection) {
+            pool.end(function(err) {
+                // all connections in the pool have ended
             });
-            //connectionPromise = Promise.reject('database has been disconnected');
         });
     }
 

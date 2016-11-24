@@ -28,7 +28,7 @@ let post = {
 });
 
 for (var i = 10 - 1; i >= 0; i--) {
-    db.save_post(post).then(function(rows) {
+    db.savePost(post).then(function(rows) {
         console.log(rows);
     }, function(error) {
         console.log(error);
@@ -39,8 +39,10 @@ for (var i = 10 - 1; i >= 0; i--) {
     db.isNotProcessed('ss').then(function(value) {
         console.log(value);
         if (value) {
-            db.save_post(post).then(function(rows) {
-                console.log(rows);
+            db.savePost(post).then(function(post_id) {
+                //console.log(post_id);
+                db.saveImagePosts(post_id, 'sss');
+                db.saveLink(post_id, 'ddd');
             }, function(error) {
                 console.log(error);
             });
@@ -51,7 +53,7 @@ for (var i = 10 - 1; i >= 0; i--) {
 }
 
 for (var i = 10 - 1; i >= 0; i--) {
-    db.save_post2('sss', post);
+    db.savePost2('sss', post);
 }
 
 

@@ -1,7 +1,3 @@
-// Installation: npm install
-//               edit user-specific variables in settings.json
-//               node rent.js
-//
 var webdriver = require('selenium-webdriver'),
     by = webdriver.By,
     until = webdriver.until,

@@ -1,9 +1,13 @@
 {
-    "sleep_delay": 3000,
-    "limit_images": 8,
+    "db_host": "localhost",
+    "db_user": "root",
+    "db_password": "vertrigo",
+    "db_database": "citybp",
+    "db_connlimit": 20,
     "city": "ufa",
     "category": "kvartiry",
     "oper": "sdam",
+    "limit_images": 8,
     "limit_pages": 0,
     "pmin": 12000,
     "pmax": 15000,
@@ -19,5 +23,6 @@
     "post_user": 1,
     "account_username": "gqdev@yandex.ru",
     "account_password": "gqdev123",
-    "object_type": ""
+    "object_type": "",
+    "sleep_delay": 3000
 }

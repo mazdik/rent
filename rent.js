@@ -7,6 +7,7 @@ var webdriver = require('selenium-webdriver'),
 var settings = require('./settings.json');
 var logger = require('./logger');
 var proc = require('./process');
+var db = require('./mysql');
 
 //setup custom Chrome capability
 var chromedriver_exe = require('chromedriver').path;
@@ -59,6 +60,7 @@ function get_content_page(href) {
     let url = href;
     let url_mobile = href.replace(/www/, 'm');
     let data = {};
+    data.href = href;
 
     //Открываем обычную версию сайта
     driver.get(url);
@@ -145,7 +147,7 @@ function get_content_page(href) {
     });
 
     webdriver.promise.all(href).then(function(results) {
-        proc.preparePost(data);
+        proc.addContent(data);
     });
 }
 
@@ -191,4 +193,6 @@ get_content_page('https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '
 
 //get_content_all();
 
-driver.quit();
+driver.quit().then(function() {
+    //db.disconnect();    
+});

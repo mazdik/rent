@@ -1,108 +1,116 @@
 var settings = require('./settings.json');
 var logger = require('./logger');
+var logger = require('./logger');
 var db = require('./mysql');
 var im = require('./image');
 
 module.exports = {
 
     preparePost: function(data) {
+        return new Promise(function(resolve, reject) {
 
-        let city_id = findValue(cities, settings.city);
-        let oper_id = findValue(opers, settings.oper);
+            let city_id = findValue(cities, settings.city);
+            let oper_id = findValue(opers, settings.oper);
 
-        let title = data.title;
-        console.log(title);
-        title = title.trim();
+            let title = data.title;
+            title = title.trim();
 
-        let address = data.address;
-        address = address.trim();
+            let address = data.address;
+            address = address.trim();
 
-        let price = data.price;
-        price = price.replace(/[^0-9]/g, '');
+            let price = data.price;
+            price = price.replace(/[^0-9]/g, '');
 
-        let description = data.description
-        description = description.trim();
-        description = title + ' ' + description;
+            let description = data.description
+            description = description.trim();
+            description = title + ' ' + description;
 
-        let number = data.number;
-        number = number.replace(/[^0-9]/g, '');
-        //удалить 8 спереди
-        number = number.substr(1);
+            let number = data.number;
+            number = number.replace(/[^0-9]/g, '');
+            //удалить 8 спереди
+            number = number.substr(1);
 
-        let breadcrumbs = data.breadcrumbs;
+            let breadcrumbs = data.breadcrumbs;
 
-        let payment = 0;
-        let type = 0;
-        if (breadcrumbs.indexOf('На длительный срок') >= 0) {
-            payment = 2;
-        } else if (breadcrumbs.indexOf('Посуточно') >= 0) {
-            payment = 1;
-        } else if (breadcrumbs.indexOf('Вторичка') >= 0) {
-            type = 1;
-        } else if (breadcrumbs.indexOf('Новостройки') >= 0) {
-            type = 2;
-        }
+            let payment = 0;
+            let type = 0;
+            if (breadcrumbs.indexOf('На длительный срок') >= 0) {
+                payment = 2;
+            } else if (breadcrumbs.indexOf('Посуточно') >= 0) {
+                payment = 1;
+            } else if (breadcrumbs.indexOf('Вторичка') >= 0) {
+                type = 1;
+            } else if (breadcrumbs.indexOf('Новостройки') >= 0) {
+                type = 2;
+            }
 
-        let square = title.match(/\d{2}/i)[0];
-        let floor_temp = title.match(/\d{1,2}\/\d{1,2}/i)[0];
-        let floor = floor_temp.substr(0, floor_temp.indexOf('/'));
-        let floornum = floor_temp.substr(floor_temp.indexOf('/') + 1);
+            let square = title.match(/\d{2}/i)[0];
+            let floor_temp = title.match(/\d{1,2}\/\d{1,2}/i)[0];
+            let floor = floor_temp.substr(0, floor_temp.indexOf('/'));
+            let floornum = floor_temp.substr(floor_temp.indexOf('/') + 1);
 
-        let rooms = title.substr(0, 1);
-        let category = getCategoryId(settings.category, rooms);
+            let rooms = title.substr(0, 1);
+            let category = getCategoryId(settings.category, rooms);
 
-        let area_full = address.substr(0, address.indexOf(','));
-        let area = area_full.substr(4); //удалить [р-н ]
-        //TODO!
-        //let area_id = getAreaByName(city_id, area);
+            let area_full = address.substr(0, address.indexOf(','));
+            let area = area_full.substr(4); //удалить [р-н ]
 
-        let time = new Date().getTime();
+            let time = Math.floor(new Date() / 1000);
+            let alias = (urlRusLat(title) + '_' + time).substr(0, 254);
 
-        let post = {
-            alias: '123',
-            city: city_id,
-            oper: oper_id,
-            realty: category,
-            address: address,
-            price: price,
-            textobj: description,
-            totalarea: square,
-            phonenum: number,
-            floor: floor,
-            floornum: floornum,
-            area_id: 123,
-            status: settings.post_status,
-            author_id: settings.post_user,
-            payment: payment,
-            type: type,
-            count_images: 0,
-            create_time: time,
-            update_time: time
-        };
-        console.log(post);
-        return post;
+            let count_images = (data.images) ? data.images.length : 0;
+            let area_id;
+            db.getAreaIdByName(city_id, area).then(function(value) {
+                area_id = value;
+
+                let post = {
+                    alias: alias,
+                    city: city_id,
+                    oper: oper_id,
+                    realty: category,
+                    address: address,
+                    price: price,
+                    textobj: description,
+                    totalarea: square,
+                    phonenum: number,
+                    floor: floor,
+                    floornum: floornum,
+                    area_id: area_id,
+                    status: settings.post_status,
+                    author_id: settings.post_user,
+                    payment: payment,
+                    type: type,
+                    count_images: count_images,
+                    create_time: time,
+                    update_time: time
+                };
+                logger.debug(post);
+                resolve(post);
+            }, function(error) {
+                reject(error);
+            });
+        });
     },
 
     addContent: function(data) {
         let href = data.href;
         let images = data.images;
-        let post = preparePost(data);
-
-        db.isNotProcessed(href).then(function(value) {
-            console.log(value);
-            if (value) {
-                db.savePost(post).then(function(post_id) {
-                    //console.log(post_id);
-                    for (let i = images.length - 1; i >= 0; i--) {
-                        db.saveImagePosts(post_id, images[i]);
-                    }
-                    db.saveLink(post_id, href);
-                }, function(error) {
-                    console.log(error);
-                });
-            }
-        }, function(error) {
-            console.log(error);
+        this.preparePost(data).then(function(post) {
+            db.isNotProcessed(href).then(function(value) {
+                logger.debug('isNotProcessed: ' + value);
+                if (value) {
+                    db.savePost(post).then(function(post_id) {
+                        for (let i = images.length - 1; i >= 0; i--) {
+                            db.saveImagePosts(post_id, images[i]);
+                        }
+                        db.saveLink(post_id, href);
+                    }, function(error) {
+                        logger.debug(error);
+                    });
+                }
+            }, function(error) {
+                logger.debug(error);
+            });
         });
     }
 
@@ -169,4 +177,35 @@ function findValue(o, value) {
         }
     }
     return null;
+}
+
+//Транслитерация кириллицы в URL
+function urlRusLat(str) {
+    str = str.toLowerCase(); // все в нижний регистр
+    let cyr2latChars = new Array(
+        ['а', 'a'], ['б', 'b'], ['в', 'v'], ['г', 'g'], ['д', 'd'], ['е', 'e'], ['ё', 'yo'], ['ж', 'zh'], ['з', 'z'], ['и', 'i'], ['й', 'y'], ['к', 'k'], ['л', 'l'], ['м', 'm'], ['н', 'n'], ['о', 'o'], ['п', 'p'], ['р', 'r'], ['с', 's'], ['т', 't'], ['у', 'u'], ['ф', 'f'], ['х', 'h'], ['ц', 'c'], ['ч', 'ch'], ['ш', 'sh'], ['щ', 'shch'], ['ъ', ''], ['ы', 'y'], ['ь', ''], ['э', 'e'], ['ю', 'yu'], ['я', 'ya'],
+
+        ['А', 'A'], ['Б', 'B'], ['В', 'V'], ['Г', 'G'], ['Д', 'D'], ['Е', 'E'], ['Ё', 'YO'], ['Ж', 'ZH'], ['З', 'Z'], ['И', 'I'], ['Й', 'Y'], ['К', 'K'], ['Л', 'L'], ['М', 'M'], ['Н', 'N'], ['О', 'O'], ['П', 'P'], ['Р', 'R'], ['С', 'S'], ['Т', 'T'], ['У', 'U'], ['Ф', 'F'], ['Х', 'H'], ['Ц', 'C'], ['Ч', 'CH'], ['Ш', 'SH'], ['Щ', 'SHCH'], ['Ъ', ''], ['Ы', 'Y'], ['Ь', ''], ['Э', 'E'], ['Ю', 'YU'], ['Я', 'YA'],
+
+        ['a', 'a'], ['b', 'b'], ['c', 'c'], ['d', 'd'], ['e', 'e'], ['f', 'f'], ['g', 'g'], ['h', 'h'], ['i', 'i'], ['j', 'j'], ['k', 'k'], ['l', 'l'], ['m', 'm'], ['n', 'n'], ['o', 'o'], ['p', 'p'], ['q', 'q'], ['r', 'r'], ['s', 's'], ['t', 't'], ['u', 'u'], ['v', 'v'], ['w', 'w'], ['x', 'x'], ['y', 'y'], ['z', 'z'],
+
+        ['A', 'A'], ['B', 'B'], ['C', 'C'], ['D', 'D'], ['E', 'E'], ['F', 'F'], ['G', 'G'], ['H', 'H'], ['I', 'I'], ['J', 'J'], ['K', 'K'], ['L', 'L'], ['M', 'M'], ['N', 'N'], ['O', 'O'], ['P', 'P'], ['Q', 'Q'], ['R', 'R'], ['S', 'S'], ['T', 'T'], ['U', 'U'], ['V', 'V'], ['W', 'W'], ['X', 'X'], ['Y', 'Y'], ['Z', 'Z'],
+
+        [' ', '_'], ['0', '0'], ['1', '1'], ['2', '2'], ['3', '3'], ['4', '4'], ['5', '5'], ['6', '6'], ['7', '7'], ['8', '8'], ['9', '9'], ['-', '-']
+    );
+    let newStr = new String();
+    for (let i = 0; i < str.length; i++) {
+        ch = str.charAt(i);
+        let newCh = '';
+        for (let j = 0; j < cyr2latChars.length; j++) {
+            if (ch == cyr2latChars[j][0]) {
+                newCh = cyr2latChars[j][1];
+            }
+        }
+        // Если найдено совпадение, то добавляется соответствие, если нет - пустая строка
+        newStr += newCh;
+    }
+    // Удаляем повторяющие знаки - Именно на них заменяются пробелы.
+    // Так же удаляем символы перевода строки, но это наверное уже лишнее
+    return newStr.replace(/[_]{2,}/gim, '_').replace(/\n/gim, '');
 }

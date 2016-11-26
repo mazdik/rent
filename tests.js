@@ -36,7 +36,7 @@ for (var i = 10 - 1; i >= 0; i--) {
     });
 }*/
 
-for (var i = 10 - 1; i >= 0; i--) {
+/*for (var i = 10 - 1; i >= 0; i--) {
     db.isNotProcessed('ss').then(function(value) {
         console.log(value);
         if (value) {
@@ -55,7 +55,12 @@ for (var i = 10 - 1; i >= 0; i--) {
 
 for (var i = 10 - 1; i >= 0; i--) {
     db.savePost2('sss', post);
-}
+}*/
 
+db.getAreaIdByName(3345, 'Советский').then(function(rows) {
+    console.log(rows);
+}, function(error) {
+    console.log(error);
+});
 
 //db.disconnect();

@@ -2,6 +2,7 @@ var db = require('./mysql');
 
 let post = {
     alias: '123',
+    city: 123,
     oper: 123,
     realty: 123,
     address: 'Hello MySQL',

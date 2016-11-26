@@ -6,6 +6,7 @@ var webdriver = require('selenium-webdriver'),
 
 var settings = require('./settings.json');
 var logger = require('./logger');
+var proc = require('./process');
 
 //setup custom Chrome capability
 var chromedriver_exe = require('chromedriver').path;
@@ -57,6 +58,7 @@ function pagi_count(url) {
 function get_content_page(href) {
     let url = href;
     let url_mobile = href.replace(/www/, 'm');
+    let data = {};
 
     //Открываем обычную версию сайта
     driver.get(url);
@@ -64,7 +66,7 @@ function get_content_page(href) {
     //заголовок
     driver.findElement(by.css('.title-info-title')).getText().then(function(value) {
         logger.debug('section_txt: ' + value);
-        let title = value.trim;
+        data.title = value;
     }, function(err) {
         if (err.state) {
             logger.error(err);
@@ -74,7 +76,7 @@ function get_content_page(href) {
     //адрес
     driver.findElement(by.css(".item-map-address > span[itemprop='address']")).getText().then(function(value) {
         logger.debug('section_txt: ' + value);
-        let address = value.trim;
+        data.address = value;
     }, function(err) {
         if (err.state) {
             logger.error(err);
@@ -84,7 +86,7 @@ function get_content_page(href) {
     //описание
     driver.findElement(by.css('.item-description')).getText().then(function(value) {
         //logger.debug('section_txt: ' + value);
-        let description = value.trim;
+        data.description = value;
     }, function(err) {
         if (err.state) {
             logger.error(err);
@@ -92,21 +94,9 @@ function get_content_page(href) {
     });
 
     //хлебные крошки
-    driver.findElement(by.xpath('/html/body/div[4]/div[1]/div[2]/div[2]')).getText().then(function(value) {
+    driver.findElement(by.css('div.b-catalog-breadcrumbs')).getText().then(function(value) {
         logger.debug('section_txt: ' + value);
-        let payment = 0;
-        let type = 0;
-        if (value.indexOf('На длительный срок') >= 0) {
-            payment = 2;
-        } else if (value.indexOf('Посуточно') >= 0) {
-            payment = 1;
-        } else if (value.indexOf('Вторичка') >= 0) {
-            type = 1;
-        } else if (value.indexOf('Новостройки') >= 0) {
-            type = 2;
-        }
-        logger.debug('section_txt: ' + payment);
-        logger.debug('section_txt: ' + type);
+        data.breadcrumbs = value;
     }, function(err) {
         if (err.state) {
             logger.error(err);
@@ -123,6 +113,7 @@ function get_content_page(href) {
         });
     }).then(function(filteredSpans) {
         //filteredSpans[0].click();
+        data.images = images;
         images.forEach(function(elem, index, array) {
             logger.debug(index + ": " + elem);
         });
@@ -134,8 +125,7 @@ function get_content_page(href) {
     //цена
     driver.findElement(by.css('.price-value')).getText().then(function(value) {
         logger.debug('section_txt: ' + value);
-        let price = value.replace(/[^0-9]/g, '');
-        logger.debug('section_txt: ' + price);
+        data.price = value;
     }, function(err) {
         if (err.state) {
             logger.error(err);
@@ -147,14 +137,15 @@ function get_content_page(href) {
     driver.sleep(settings.sleep_delay);
     driver.findElement(by.css('.action-show-number')).getText().then(function(value) {
         logger.debug('section_txt: ' + value);
-        let number = value.replace(/[^0-9]/g, '');
-        //удалить 8 спереди
-        number = number.substr(1);
-        logger.debug('section_txt: ' + number);
+        data.number = value;
     }, function(err) {
         if (err.state) {
             logger.error(err);
         }
+    });
+
+    webdriver.promise.all(href).then(function(results) {
+        proc.preparePost(data);
     });
 }
 
@@ -196,8 +187,8 @@ function get_content_all() {
     });;
 }
 
-//get_content_page('/ufa/kvartiry/2-k_kvartira_50_m_99_et._853831519')
+get_content_page('https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/2-k_kvartira_42_m_29_et._876881266')
 
-get_content_all();
+//get_content_all();
 
 driver.quit();

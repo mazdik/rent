@@ -1,4 +1,5 @@
 var db = require('./mysql');
+var im = require('./image');
 
 let post = {
     alias: '123',
@@ -64,3 +65,4 @@ db.getAreaIdByName(3345, 'Советский').then(function(rows) {
 });
 
 //db.disconnect();
+

@@ -1,6 +1,5 @@
 var settings = require('./settings.json');
 var logger = require('./logger');
-var logger = require('./logger');
 var db = require('./mysql');
 var im = require('./image');
 
@@ -101,7 +100,10 @@ module.exports = {
                 if (value) {
                     db.savePost(post).then(function(post_id) {
                         for (let i = images.length - 1; i >= 0; i--) {
-                            db.saveImagePosts(post_id, images[i]);
+                            let file_name = imageName();
+                            im.saveImage('https:'+ images[i], file_name).then(function(saved_file_name) {
+                                db.saveImagePosts(post_id, saved_file_name);
+                            });
                         }
                         db.saveLink(post_id, href);
                     }, function(error) {
@@ -168,6 +170,20 @@ function getCategoryId(category, rooms = null) {
         category_id = 7;
     }
     return category_id;
+}
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function imageName() {
+    let random = getRandomInt(1, 999);
+    let time = Math.floor(new Date() / 1000);
+    let yead = new Date().getFullYear();
+    let month = new Date().getMonth() + 1;
+    let fileName = yead + '_' + month + '_' + time + '_' + random + '_' + settings.city;
+    fileName = fileName.substr(0, 254);
+    return fileName;
 }
 
 function findValue(o, value) {

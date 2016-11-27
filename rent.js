@@ -193,6 +193,7 @@ get_content_page('https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '
 
 //get_content_all();
 
+driver.sleep(settings.sleep_delay);
 driver.quit().then(function() {
     //db.disconnect();    
 });

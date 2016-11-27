@@ -24,5 +24,7 @@
     "account_username": "gqdev@yandex.ru",
     "account_password": "gqdev123",
     "object_type": "",
+    "images_dir": "D:/Yii/citybp/images/upload/",
+    "watermark": "D:/Yii/citybp/images/watermark.png",
     "sleep_delay": 3000
 }

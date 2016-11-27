@@ -8,6 +8,7 @@ var settings = require('./settings.json');
 var logger = require('./logger');
 var proc = require('./process');
 var db = require('./mysql');
+var promiseLimit = require('promise-limit');
 
 //setup custom Chrome capability
 var chromedriver_exe = require('chromedriver').path;
@@ -44,20 +45,20 @@ function createUrl() {
 }
 
 function pagi_count(url) {
-    let promise = new webdriver.promise.Promise(function(resolve, reject) {
+    return new webdriver.promise.Promise(function(resolve, reject) {
         driver.get(url);
         //пагинатор
-        driver.findElement(by.css("div.pagination-pages > a.pagination-page:last-child")).getAttribute('href').then(function(value) {
-            //logger.debug('section_txt: ' + value);
-            let count = value.match(/p=\d{1,4}/);
-            count = count[0].replace(/[^0-9]/g, '');
-            logger.debug('pagi_count: ' + count);
-            resolve(count);
-        }, function(err) {
-            reject(err);
-        });
+        return driver.findElement(by.css("div.pagination-pages > a.pagination-page:last-child"))
+            .getAttribute('href').then(function(value) {
+                //logger.debug('section_txt: ' + value);
+                let count = value.match(/p=\d{1,4}/);
+                count = count[0].replace(/[^0-9]/g, '');
+                logger.debug('pagi_count: ' + count);
+                resolve(count);
+            }, function(err) {
+                reject(err);
+            });
     });
-    return promise;
 }
 
 function get_content_page(href) {
@@ -151,8 +152,8 @@ function get_content_page(href) {
             }
         });
 
-        webdriver.promise.all(href).then(function(results) {
-            proc.addContent(data).then(function() {
+        return webdriver.promise.all(href).then(function(results) {
+            return proc.addContent(data).then(function() {
                 resolve(1);
             });
         });
@@ -161,48 +162,81 @@ function get_content_page(href) {
 
 function get_content_list(url) {
     let links = [];
+    let limit = promiseLimit(1);
     driver.get(url);
     let spans = driver.findElements(webdriver.By.css('div.item > div.description > h3.title > a'));
-    webdriver.promise.filter(spans, function(span) {
+    return webdriver.promise.filter(spans, function(span) {
         return span.getAttribute('href').then(function(value) {
             links.push(value);
             return true;
         });
     }).then(function(filteredSpans) {
-        links.forEach(function(elem, index, array) {
-            logger.debug('link: ' + elem);
-            db.isNotProcessed(elem).then(function(value) {
-                logger.debug('isNotProcessed: ' + value);
-                if (value) {
-                    get_content_page(elem).then(function(){
-                        
-                    });
-                }
-            });
-        });
         count_links += links.length;
+        return Promise.all(links.map(function(link) {
+            return limit(function() {
+                return new Promise(function(resolve, reject) {
+                    return db.isNotProcessed(link).then(function(value) {
+                        logger.debug('link: ' + link);
+                        logger.debug('isNotProcessed: ' + value);
+                        if (value) {
+                            count_parse++;
+                            return get_content_page(link).then(function() {
+                                count_saves++;
+                                resolve();
+                            });
+                        } else {
+                            resolve();
+                        }
+                    });
+                });
+            });
+        }));
     });
 }
 
 function get_content_all() {
     let url = createUrl();
     let cnt = 0;
-    pagi_count(url).then(function(value) {
+    let links = [];
+    let limit = promiseLimit(1);
+    return pagi_count(url).then(function(value) {
         cnt = value;
-        let limit = (settings.limit_pages == 0) ? cnt : settings.limit_pages;
-        for (let index = 1; index <= limit; index++) {
-            //logger.debug('page: ' + index);
-            get_content_list(url + '&p=' + index);
+        let limit_pages = (settings.limit_pages == 0) ? cnt : settings.limit_pages;
+        for (let index = 1; index <= limit_pages; index++) {
+            links.push(url + '&p=' + index);
+            logger.debug('url_list: ' + url + '&p=' + index);
         }
+
+        return Promise.all(links.map(function(link) {
+            return limit(function() {
+                return new Promise(function(resolve, reject) {
+                    return get_content_list(link).then(function() {
+                        resolve('finish');
+                    });
+                });
+            });
+        }));
     }, function(err) {
         if (err.state) {
             logger.error(err);
         }
-        get_content_list(url);
-    });;
+        logger.debug('url_list: ' + url);
+        return new Promise(function(resolve, reject) {
+            return get_content_list(url).then(function() {
+                resolve('finish');
+            });
+        });
+    });
 }
 
-let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/2-k_kvartira_42_m_29_et._876881266';
+get_content_all().then(function(value) {
+	logger.debug(value);
+    logger.debug('Всего: ' + count_links + ' Из них спарсено: ' + count_parse + ' Из них сохранено: ' + count_saves);
+    driver.quit();
+    db.disconnect();
+});
+
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/2-k_kvartira_42_m_29_et._876881266';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     if (value) {
@@ -210,12 +244,4 @@ db.isNotProcessed(uuu).then(function(value) {
             logger.debug('sss');
         });
     }
-});
-
-//get_content_all();
-
-/*driver.sleep(settings.sleep_delay);
-driver.quit().then(function() {
-    logger.debug('Всего: ' + count_links + ' Из них спарсено: ' + count_parse + ' Из них сохранено: ' + count_saves);
-    //db.disconnect();    
 });*/

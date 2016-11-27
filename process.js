@@ -94,22 +94,23 @@ module.exports = {
     addContent: function(data) {
         let href = data.href;
         let images = data.images;
-        this.preparePost(data).then(function(post) {
-            db.isNotProcessed(href).then(function(value) {
-                logger.debug('isNotProcessed: ' + value);
-                if (value) {
-                    db.savePost(post).then(function(post_id) {
-                        for (let i = images.length - 1; i >= 0; i--) {
-                            let file_name = imageName();
-                            im.saveImage('https:'+ images[i], file_name).then(function(saved_file_name) {
-                                db.saveImagePosts(post_id, saved_file_name);
+        return this.preparePost(data).then(function(post) {
+            return db.savePost(post).then(function(post_id) {
+                return Promise.all(images.map(function(item) {
+                    return new Promise(function(resolve, reject) {
+                        return im.saveImage('https:' + item).then(function(saved_file_name) {
+                            db.saveImagePosts(post_id, saved_file_name).then(function(value) {
+                                resolve(value);
                             });
-                        }
-                        db.saveLink(post_id, href);
-                    }, function(error) {
-                        logger.debug(error);
+                        });
                     });
-                }
+                })).then(function(data) {
+                    return db.saveLink(post_id, href).then(function(value) {
+                        return new Promise(function(resolve, reject) {
+                            resolve(value);
+                        });
+                    });
+                });
             }, function(error) {
                 logger.debug(error);
             });
@@ -170,20 +171,6 @@ function getCategoryId(category, rooms = null) {
         category_id = 7;
     }
     return category_id;
-}
-
-function getRandomInt(min, max) {
-    return Math.floor(Math.random() * (max - min)) + min;
-}
-
-function imageName() {
-    let random = getRandomInt(1, 999);
-    let time = Math.floor(new Date() / 1000);
-    let yead = new Date().getFullYear();
-    let month = new Date().getMonth() + 1;
-    let fileName = yead + '_' + month + '_' + time + '_' + random + '_' + settings.city;
-    fileName = fileName.substr(0, 254);
-    return fileName;
 }
 
 function findValue(o, value) {

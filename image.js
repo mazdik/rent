@@ -8,8 +8,9 @@ var watermark = settings.watermark;
 
 module.exports = {
 
-    saveImage: function(url, file_name) {
+    saveImage: function(url) {
         return new Promise(function(resolve, reject) {
+            let file_name = imageName();
             let extension = '.jpg';
             let img = gm(url)
                 .identify(function(err, identify) {
@@ -47,4 +48,18 @@ module.exports = {
         });
     }
 
+}
+
+function getRandomInt(min, max) {
+    return Math.floor(Math.random() * (max - min)) + min;
+}
+
+function imageName() {
+    let random = getRandomInt(1, 999);
+    let time = Math.floor(new Date() / 1000);
+    let yead = new Date().getFullYear();
+    let month = new Date().getMonth() + 1;
+    let fileName = yead + '_' + month + '_' + time + '_' + random + '_' + settings.city;
+    fileName = fileName.substr(0, 254);
+    return fileName;
 }

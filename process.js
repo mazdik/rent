@@ -58,8 +58,9 @@ module.exports = {
             let alias = (urlRusLat(title) + '_' + time).substr(0, 254);
 
             let count_images = (data.images) ? data.images.length : 0;
+
             let area_id;
-            db.getAreaIdByName(city_id, area).then(function(value) {
+            return db.getAreaIdByName(city_id, area).then(function(value) {
                 area_id = value;
 
                 let post = {
@@ -92,6 +93,10 @@ module.exports = {
     },
 
     addContent: function(data) {
+        if (postExcludes(data.description)) {
+            logger.debug('Имеются слова исключения.');
+            return Promise.resolve(0);
+        }
         let href = data.href;
         let images = data.images;
         return this.preparePost(data).then(function(post) {
@@ -113,10 +118,23 @@ module.exports = {
                 });
             }, function(error) {
                 logger.debug(error);
+                reject();
             });
         });
     }
 
+}
+
+function postExcludes(description) {
+    let isMatch = false;
+    if (settings.exclude) {
+        let excludes = settings.exclude.split(',');
+        isMatch = excludes.some(function(exclude) {
+            let regex = new RegExp(exclude.trim(), "i");
+            return regex.test(description);
+        });
+    }
+    return (isMatch);
 }
 
 let cities = {

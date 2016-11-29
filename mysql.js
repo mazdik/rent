@@ -7,7 +7,8 @@ var pool = mysql.createPool({
     host: settings.db_host,
     user: settings.db_user,
     password: settings.db_password,
-    database: settings.db_database
+    database: settings.db_database,
+    charset : 'utf8mb4'
 });
 
 module.exports = {
@@ -16,6 +17,7 @@ module.exports = {
         let result = true;
         return new Promise(function(resolve, reject) {
             return pool.getConnection(function(err, connection) {
+                if (err) return reject(err);
                 connection.query('select count(*) AS count from tbl_parser_links t where t.link=?', [href], function(err, rows, fields) {
                     if (err) return reject(err);
                     connection.release();
@@ -29,6 +31,7 @@ module.exports = {
     savePost: function(post) {
         return new Promise(function(resolve, reject) {
             return pool.getConnection(function(err, connection) {
+                if (err) return reject(err);
                 connection.query('INSERT INTO tbl_post SET ?', post, function(err, result) {
                     if (err) return reject(err);
                     connection.release();
@@ -43,16 +46,17 @@ module.exports = {
     savePost2: function(href, post) {
         return new Promise(function(resolve, reject) {
             return pool.getConnection(function(err, connection) {
+                if (err) return reject(err);
                 let link_exist = 0;
                 connection.query('select count(*) AS count from tbl_parser_links t where t.link=?', [href], function(err, rows, fields) {
-                    if (err) throw err;
+                    if (err) return reject(err);
                     link_exist = rows[0].count;
                     //logger.debug(rows[0].count + ' rows');
                     connection.release();
                 }).on('end', function() {
                     if (link_exist == 0) {
                         let query = connection.query('INSERT INTO tbl_post SET ?', post, function(err, result) {
-                            if (err) throw err;
+                            if (err) return reject(err);
                             connection.release();
                             logger.debug('post inserted ' + result.affectedRows + ' rows');
                             resolve(result.insertId);
@@ -67,6 +71,7 @@ module.exports = {
     saveLink: function(post_id, href) {
         return new Promise(function(resolve, reject) {
             return pool.getConnection(function(err, connection) {
+                if (err) return reject(err);
                 connection.query('INSERT INTO tbl_parser_links SET ?', { link: href, post_id: post_id }, function(err, result) {
                     if (err) return reject(err);
                     connection.release();
@@ -80,6 +85,7 @@ module.exports = {
     saveImagePosts: function(post_id, image) {
         return new Promise(function(resolve, reject) {
             return pool.getConnection(function(err, connection) {
+                if (err) return reject(err);
                 connection.query('INSERT INTO tbl_post_images SET ?', { product_id: post_id, title: image, filename: image }, function(err, result) {
                     if (err) return reject(err);
                     connection.release();
@@ -94,6 +100,7 @@ module.exports = {
         let result;
         return new Promise(function(resolve, reject) {
             return pool.getConnection(function(err, connection) {
+                if (err) return reject(err);
                 connection.query('select id from tbl_area t where t.city_id=? and t.name=?', [city_id, area_name], function(err, rows, fields) {
                     if (err) return reject(err);
                     connection.release();

@@ -26,5 +26,8 @@
     "object_type": "",
     "images_dir": "D:/Yii/citybp/images/upload/",
     "watermark": "D:/Yii/citybp/images/watermark.png",
-    "sleep_delay": 3000
+    "sleep_delay": 3000,
+    "chrome": 0,
+    "firefox": 0,
+    "phantomjs": 1
 }

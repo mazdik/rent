@@ -20,9 +20,14 @@ var phantomjs_exe = require('phantomjs-prebuilt').path;
 var customPhantom = webdriver.Capabilities.phantomjs();
 customPhantom.set("phantomjs.binary.path", phantomjs_exe);
 
-var driver = new webdriver.Builder().withCapabilities(customPhantom).build();
-//var driver = new webdriver.Builder().forBrowser('firefox').build();
-//var driver = new webdriver.Builder().withCapabilities(customChrome).build();
+var driver;
+if (settings.chrome == 1) {
+    driver = new webdriver.Builder().withCapabilities(customChrome).build();
+} else if (settings.firefox == 1) {
+    driver = new webdriver.Builder().forBrowser('firefox').build();
+} else {
+    driver = new webdriver.Builder().withCapabilities(customPhantom).build();
+}
 
 let count_parse = 0;
 let count_saves = 0;
@@ -44,7 +49,7 @@ function createUrl() {
     return url;
 }
 
-function pagi_count(url) {
+function pagiCount(url) {
     return new webdriver.promise.Promise(function(resolve, reject) {
         driver.get(url);
         //пагинатор
@@ -61,7 +66,7 @@ function pagi_count(url) {
     });
 }
 
-function get_content_page(href) {
+function getContentPage(href) {
     return new webdriver.promise.Promise(function(resolve, reject) {
         let url = href;
         let url_mobile = href.replace(/www/, 'm');
@@ -155,12 +160,14 @@ function get_content_page(href) {
         return webdriver.promise.all(href).then(function(results) {
             return proc.addContent(data).then(function() {
                 resolve(1);
+            }, function(err) {
+                reject(err);
             });
         });
     });
 }
 
-function get_content_list(url) {
+function getContentList(url) {
     let links = [];
     let limit = promiseLimit(1);
     driver.get(url);
@@ -180,7 +187,7 @@ function get_content_list(url) {
                         logger.debug('isNotProcessed: ' + value);
                         if (value) {
                             count_parse++;
-                            return get_content_page(link).then(function() {
+                            return getContentPage(link).then(function() {
                                 count_saves++;
                                 resolve();
                             });
@@ -194,12 +201,12 @@ function get_content_list(url) {
     });
 }
 
-function get_content_all() {
+function getContentAll() {
     let url = createUrl();
     let cnt = 0;
     let links = [];
     let limit = promiseLimit(1);
-    return pagi_count(url).then(function(value) {
+    return pagiCount(url).then(function(value) {
         cnt = value;
         let limit_pages = (settings.limit_pages == 0) ? cnt : settings.limit_pages;
         for (let index = 1; index <= limit_pages; index++) {
@@ -210,7 +217,7 @@ function get_content_all() {
         return Promise.all(links.map(function(link) {
             return limit(function() {
                 return new Promise(function(resolve, reject) {
-                    return get_content_list(link).then(function() {
+                    return getContentList(link).then(function() {
                         resolve('finish');
                     });
                 });
@@ -222,26 +229,36 @@ function get_content_all() {
         }
         logger.debug('url_list: ' + url);
         return new Promise(function(resolve, reject) {
-            return get_content_list(url).then(function() {
+            return getContentList(url).then(function() {
                 resolve('finish');
             });
         });
     });
 }
 
-get_content_all().then(function(value) {
-	logger.debug(value);
+getContentAll().then(function(value) {
+    logger.debug(value);
     logger.debug('Всего: ' + count_links + ' Из них спарсено: ' + count_parse + ' Из них сохранено: ' + count_saves);
     driver.quit();
     db.disconnect();
+}, function(err) {
+    logger.error(err);
 });
 
-/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/2-k_kvartira_42_m_29_et._876881266';
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_39_m_712_et._878107618';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     if (value) {
-        get_content_page(uuu).then(function() {
+        getContentPage(uuu).then(function() {
             logger.debug('sss');
         });
     }
 });*/
+
+/*let url = createUrl();
+pagiCount(url).then(function(value) {
+    logger.debug(value);
+}, function(err) {
+    logger.error(err);
+});
+*/

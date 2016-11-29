@@ -118,7 +118,7 @@ module.exports = {
                 });
             }, function(error) {
                 logger.debug(error);
-                reject();
+                return Promise.reject(error);
             });
         });
     }

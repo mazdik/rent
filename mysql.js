@@ -8,7 +8,8 @@ var pool = mysql.createPool({
     user: settings.db_user,
     password: settings.db_password,
     database: settings.db_database,
-    charset : 'utf8mb4'
+    charset: 'utf8mb4',
+    insecureAuth: true
 });
 
 module.exports = {

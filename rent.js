@@ -10,6 +10,8 @@ var proc = require('./process');
 var db = require('./mysql');
 var promiseLimit = require('promise-limit');
 
+var userAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36';
+
 //setup custom Chrome capability
 var chromedriver_exe = require('chromedriver').path;
 var customChrome = webdriver.Capabilities.chrome();
@@ -19,6 +21,9 @@ customChrome.set("chrome.binary.path", chromedriver_exe);
 var phantomjs_exe = require('phantomjs-prebuilt').path;
 var customPhantom = webdriver.Capabilities.phantomjs();
 customPhantom.set("phantomjs.binary.path", phantomjs_exe);
+customPhantom.set("phantomjs.page.settings.userAgent", userAgent);
+customPhantom.set("phantomjs.page.settings.loadImages", false);
+customPhantom.set("phantomjs.page.settings.localToRemoteUrlAccessEnabled", true);
 
 var driver;
 if (settings.chrome == 1) {

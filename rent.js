@@ -126,7 +126,7 @@ function getContentPage(href) {
         let spans = driver.findElements(webdriver.By.css('.gallery-extended-img-frame'));
         webdriver.promise.filter(spans, function(span) {
             return span.getAttribute('data-url').then(function(value) {
-                images.push(value);
+                images.push('https:' + value);
                 return true;
             });
         }).then(function(filteredSpans) {
@@ -250,7 +250,7 @@ getContentAll().then(function(value) {
     logger.error(err);
 });
 
-/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_39_m_712_et._878107618';
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/2-k_kvartira_52_m_910_et._868724352';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     if (value) {

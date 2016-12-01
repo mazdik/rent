@@ -103,7 +103,7 @@ module.exports = {
             return db.savePost(post).then(function(post_id) {
                 return Promise.all(images.map(function(item) {
                     return new Promise(function(resolve, reject) {
-                        return im.saveImage('https:' + item).then(function(saved_file_name) {
+                        return im.saveImage(item).then(function(saved_file_name) {
                             return db.saveImagePosts(post_id, saved_file_name).then(function(value) {
                                 resolve(value);
                             });

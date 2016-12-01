@@ -2,28 +2,27 @@ var settings = require('./settings.json');
 var logger = require('./logger');
 var fs = require('fs');
 var gm = require('gm').subClass({ imageMagick: true });
+var request = require('request');
+const path = require('path');
 
-var dir = settings.images_dir;
-var watermark = settings.watermark;
+const dir = settings.images_dir;
+const watermark = settings.watermark;
 
 module.exports = {
 
     saveImage: function(url) {
         return new Promise(function(resolve, reject) {
             let file_name = imageName();
-            let extension = '.jpg';
-            let img = gm(url)
-                .identify(function(err, identify) {
+            let extension = (path.extname(url) == '.' || path.extname(url) == '') ? '.jpg' : path.extname(url);
+            //logger.debug(path.extname(url));
+            let img = gm(request(url))
+                .identify({ bufferStream: true }, function(err, identify) {
                     if (!err) {
                         //logger.debug(identify);
                         let width = identify['size']['width'];
                         let height = identify['size']['height'];
-                        let baseFilename = identify['Base filename'];
+                        let baseFilename = path.basename(url);
                         logger.debug('baseFilename: ' + baseFilename + ' width: ' + width + ' height: ' + height);
-                        if (baseFilename) {
-                            extension = baseFilename.substring(baseFilename.indexOf('.'));
-                            //logger.debug(extension);
-                        }
                         img.quality(70)
                             /* Обрезка снизу вверх */
                             .crop(width, (height / 100) * settings.crop, 0, 0)

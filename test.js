@@ -1,5 +1,6 @@
 var db = require('./mysql');
 var im = require('./image');
+const path = require('path');
 
 let post = {
     alias: '123',
@@ -59,10 +60,15 @@ for (var i = 10 - 1; i >= 0; i--) {
 }*/
 
 db.getAreaIdByName(3345, 'Советский').then(function(rows) {
-    console.log(rows);
+    console.log('AreaId: ' + rows);
 }, function(error) {
     console.log(error);
 });
 
-//db.disconnect();
+/*let url = 'https://ru.wikipedia.org/static/images/project-logos/ruwiki.png';
+im.saveImage(url).then(function(saved_file_name) {
+    console.log('saved_file_name: ' + saved_file_name);
+});
+*/
 
+//db.disconnect();

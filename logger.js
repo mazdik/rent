@@ -6,25 +6,25 @@ log4js.configure({
     appenders: [
         { type: 'console' }, {
             type: 'file',
-            filename: "logs/log.log",
+            filename: __dirname + "/logs/log.log",
             category: 'log',
             maxLogSize: 200480,
             backups: 2
         }, {
             type: 'file',
-            filename: "logs/error.log",
+            filename: __dirname + "/logs/error.log",
             category: 'error',
             maxLogSize: 200480,
             backups: 2
         }, {
             type: "file",
-            filename: "logs/info.log",
+            filename: __dirname + "/logs/info.log",
             category: 'info',
             maxLogSize: 200480,
             backups: 2
         }, {
             type: 'file',
-            filename: "logs/debug.log",
+            filename: __dirname + "/logs/debug.log",
             category: 'debug',
             maxLogSize: 200480,
             backups: 2

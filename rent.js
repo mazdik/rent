@@ -92,7 +92,7 @@ function getContentPage(href) {
         });
 
         //адрес
-        driver.findElement(by.css(".item-map-address > span[itemprop='address']")).getText().then(function(value) {
+        driver.findElement(by.css(".item-map-address[itemprop='address']")).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.address = value;
         }, function(err) {

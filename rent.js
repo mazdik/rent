@@ -9,6 +9,7 @@ var logger = require('./logger');
 var proc = require('./process');
 var db = require('./mysql');
 var promiseLimit = require('promise-limit');
+var fs = require('fs');
 
 var userAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36';
 
@@ -24,6 +25,12 @@ customPhantom.set("phantomjs.binary.path", phantomjs_exe);
 customPhantom.set("phantomjs.page.settings.userAgent", userAgent);
 customPhantom.set("phantomjs.page.settings.loadImages", false);
 customPhantom.set("phantomjs.page.settings.localToRemoteUrlAccessEnabled", true);
+if(settings.proxy !== "") {
+	customPhantom.set("proxy", {
+    'proxyType': 'manual',
+    'httpProxy': settings.proxy
+  });
+}
 
 var driver;
 if (settings.chrome == 1) {
@@ -151,7 +158,11 @@ function getContentPage(href) {
         });
 
         //номер телефона
-        driver.findElement(by.css('.action-show-number')).click();
+        driver.findElement(by.css('.action-show-number')).click().then(null, function(err) { 
+        	logger.error(err);
+        	takeScreenshot();
+        	reject(err);
+        });
         driver.sleep(settings.sleep_delay);
         driver.findElement(by.css('.action-show-number')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
@@ -170,6 +181,15 @@ function getContentPage(href) {
             });
         });
     });
+}
+
+function takeScreenshot() {
+    driver.takeScreenshot().then(function(data){
+	   var base64Data = data.replace(/^data:image\/png;base64,/,"")
+	   fs.writeFile(__dirname + "/logs/screensho.png", base64Data, 'base64', function(err) {
+	        if(err) logger.error(err);
+	   });
+	});
 }
 
 function getContentList(url) {
@@ -250,7 +270,7 @@ getContentAll().then(function(value) {
     logger.error(err);
 });
 
-/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/2-k_kvartira_52_m_910_et._868724352';
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_39_m_1218_et._897884855';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     if (value) {

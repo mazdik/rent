@@ -26,10 +26,7 @@ customPhantom.set("phantomjs.page.settings.userAgent", userAgent);
 customPhantom.set("phantomjs.page.settings.loadImages", false);
 customPhantom.set("phantomjs.page.settings.localToRemoteUrlAccessEnabled", true);
 if(settings.proxy !== "") {
-	customPhantom.set("proxy", {
-    'proxyType': 'manual',
-    'httpProxy': settings.proxy
-  });
+customPhantom.set("phantomjs.cli.args",["--proxy="+settings.proxy,"--proxy-auth="+settings.proxyuserpwd,"--web-security=no","--ignore-ssl-errors=yes"]);
 }
 
 var driver;
@@ -273,11 +270,9 @@ getContentAll().then(function(value) {
 /*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_39_m_1218_et._897884855';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
-    if (value) {
-        getContentPage(uuu).then(function() {
-            logger.debug('sss');
-        });
-    }
+    getContentPage(uuu).then(function() {
+        logger.debug('sss');
+    });
 });*/
 
 /*let url = createUrl();

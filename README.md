@@ -61,6 +61,7 @@ git --version
 ```
 
 ## Настройки (settings.json)
+```bash
 "db_host": 			хост бд
 "db_user": 			имя бд
 "db_password": 		пользователь бд
@@ -92,3 +93,4 @@ git --version
 "chrome": 			браузер (1 - вкл, 0 - выкл)
 "firefox": 			браузер (1 - вкл, 0 - выкл)
 "phantomjs": 		браузер (1 - вкл, 0 - выкл)
+```

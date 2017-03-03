@@ -23,7 +23,7 @@
     "post_user": 1,
     "account_username": "gqdev@yandex.ru",
     "account_password": "gqdev123",
-    "object_type": "",
+    "object_type": "na_dlitelnyy_srok",
     "images_dir": "/mnt/FE8C257E8C253297/Yii/citybp/images/upload/",
     "watermark": "/mnt/FE8C257E8C253297/Yii/citybp/images/watermark.png",
     "sleep_delay": 3000,

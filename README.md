@@ -9,6 +9,12 @@ npm install
 node rent.js
 ```
 
+## Обновить
+```bash
+rm -rf node_modules
+npm install 
+```
+
 ## Node.js
 Download and install [Node.js](https://nodejs.org)
 

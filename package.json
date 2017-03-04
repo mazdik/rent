@@ -4,13 +4,13 @@
   "description": "avito rent",
   "main": "none",
   "dependencies": {
-    "chromedriver": "^2.25.1",
+    "chromedriver": "^2.27.3",
     "gm": "^1.23.0",
-    "log4js": "^1.0.1",
+    "log4js": "^1.1.1",
     "mysql": "^2.12.0",
     "phantomjs-prebuilt": "^2.1.14",
     "promise-limit": "^2.3.0",
-    "selenium-webdriver": "^2.53.3"
+    "selenium-webdriver": "^3.1.0"
   },
   "devDependencies": {},
   "scripts": {},

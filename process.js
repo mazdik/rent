@@ -44,9 +44,15 @@ module.exports = {
             }
 
             let square = title.match(/\d{2}/i)[0];
-            let floor_temp = title.match(/\d{1,2}\/\d{1,2}/i)[0];
-            let floor = floor_temp.substr(0, floor_temp.indexOf('/'));
-            let floornum = floor_temp.substr(floor_temp.indexOf('/') + 1);
+
+            let floor_temp = title.match(/\d{1,2}\/\d{1,2}/i);
+            let floor = 0;
+            let floornum = 0;
+            if(floor_temp) {
+                floor_temp = floor_temp[0];
+                floor = floor_temp.substr(0, floor_temp.indexOf('/'));
+                floornum = floor_temp.substr(floor_temp.indexOf('/') + 1);
+            }
 
             let rooms = title.substr(0, 1);
             let category = getCategoryId(settings.category, rooms);

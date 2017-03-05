@@ -1,6 +1,6 @@
 # rent
 
-## Быстрый старт
+### Быстрый старт
 ```bash
 git clone https://github.com/mazdik/rent.git
 cd rent
@@ -10,27 +10,26 @@ cp settings-example.json settings.json
 node rent.js
 ```
 
-## Обновить
+### Обновить
 ```bash
 git pull origin
 ```
-
 ### Обновить пакеты
 ```bash
 rm -rf node_modules
 npm install 
 ```
 
-## Node.js
+### Node.js
 Download and install [Node.js](https://nodejs.org)
 
-## ImageMagick
+### ImageMagick
 Download and install [ImageMagick](http://www.imagemagick.org/)
 
-## PhantomJS
+### PhantomJS
 Download and install [PhantomJS](http://phantomjs.org/)
 
-## Пример установки на CentOS 7
+### Пример установки на CentOS 7
 ```bash
 yum install fontconfig freetype freetype-devel fontconfig-devel libstdc++
 yum install gcc-c++ make
@@ -42,7 +41,7 @@ yum install git
 npm install phantomjs -g
 ```
 
-## Пример установки на Linux Mint
+### Пример установки на Linux Mint
 ```bash
 curl -sL https://deb.nodesource.com/setup_7.x | sudo -E bash -
 sudo apt-get install -y nodejs
@@ -52,7 +51,7 @@ sudo apt install git
 sudo npm install phantomjs -g
 ```
 
-## Пример установки на Debian 7
+### Пример установки на Debian 7
 ```bash
 sudo apt-get install -y build-essential
 wget https://nodejs.org/dist/v7.6.0/node-v7.6.0-linux-x64.tar.xz
@@ -63,7 +62,7 @@ sudo apt-get install git
 sudo npm install phantomjs -g
 ```
 
-## Проверки
+### Проверки
 ```bash
 npm -v
 node -v
@@ -72,7 +71,7 @@ convert -version
 git --version
 ```
 
-## Настройки (settings.json)
+### Настройки (settings.json)
 "db_host":	хост бд  
 "db_user":	имя бд  
 "db_password":	пользователь бд  

@@ -135,8 +135,10 @@ function getContentPage(href) {
             });
         }).then(function(filteredSpans) {
             //filteredSpans[0].click();
-            data.images = images;
-            images.forEach(function(elem, index, array) {
+            if(settings.limit_images && settings.limit_images > 0) {
+                data.images = images.slice(0, settings.limit_images);
+            }
+            data.images .forEach(function(elem, index, array) {
                 logger.debug(index + ": " + elem);
             });
         });
@@ -267,7 +269,7 @@ getContentAll().then(function(value) {
     logger.error(err);
 });
 
-/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_39_m_1218_et._897884855';
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_50_m_210_et._959347400';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     getContentPage(uuu).then(function() {

@@ -1,15 +1,21 @@
 # rent
 
-## Quick start
+## Быстрый старт
 ```bash
 git clone https://github.com/mazdik/rent.git
 cd rent
 npm install
+cp settings-example.json settings.json
 # Поменять настройки в файле settings.json
 node rent.js
 ```
 
 ## Обновить
+```bash
+git pull origin
+```
+
+### Обновить пакеты
 ```bash
 rm -rf node_modules
 npm install 

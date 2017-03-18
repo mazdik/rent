@@ -194,6 +194,8 @@ function getCategoryId(category, rooms = null) {
         category_id = 6;
     } else if (category == 'doma_dachi_kottedzhi') {
         category_id = 7;
+    } else if (category == 'zemelnye_uchastki') {
+        category_id = 8;
     }
     return category_id;
 }

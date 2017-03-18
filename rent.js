@@ -173,8 +173,8 @@ function getContentPage(href) {
         });
 
         return webdriver.promise.all(href).then(function(results) {
-            return proc.addContent(data).then(function() {
-                resolve(1);
+            return proc.addContent(data).then(function(value) {
+                resolve(value);
             }, function(err) {
                 reject(err);
             });
@@ -211,8 +211,10 @@ function getContentList(url) {
                         logger.debug('isNotProcessed: ' + value);
                         if (value) {
                             count_parse++;
-                            return getContentPage(link).then(function() {
-                                count_saves++;
+                            return getContentPage(link).then(function(count) {
+                                if (!isNaN(count)) {
+                                    count_saves += count;
+                                }
                                 resolve();
                             });
                         } else {

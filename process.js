@@ -11,16 +11,16 @@ module.exports = {
             let city_id = findValue(cities, settings.city);
             let oper_id = findValue(opers, settings.oper);
 
-            let title = data.title;
+            let title = data.title || '';
             title = title.trim();
 
-            let address = data.address;
+            let address = data.address || '';
             address = address.trim();
 
             let price = data.price;
             price = price.replace(/[^0-9]/g, '');
 
-            let description = data.description
+            let description = data.description || '';
             description = description.trim();
             description = title + ' ' + description;
 
@@ -43,7 +43,8 @@ module.exports = {
                 type = 2;
             }
 
-            let square = title.match(/\d{2}/i)[0];
+            let square = title.match(/\d{2}/i);
+            square = (square) ? square[0] : null;
 
             let floor_temp = title.match(/\d{1,2}\/\d{1,2}/i);
             let floor = 0;
@@ -111,14 +112,14 @@ module.exports = {
                     return new Promise(function(resolve, reject) {
                         return im.saveImage(item).then(function(saved_file_name) {
                             return db.saveImagePosts(post_id, saved_file_name).then(function(value) {
-                                resolve(value);
+                                resolve(1);
                             });
                         });
                     });
                 })).then(function(data) {
                     return db.saveLink(post_id, href).then(function(value) {
                         return new Promise(function(resolve, reject) {
-                            resolve(value);
+                            resolve(1);
                         });
                     });
                 });

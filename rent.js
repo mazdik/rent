@@ -195,7 +195,7 @@ function getContentList(url) {
     let links = [];
     let limit = promiseLimit(1);
     driver.get(url);
-    let spans = driver.findElements(webdriver.By.css('div.item > div.description > h3.title > a'));
+    let spans = driver.findElements(webdriver.By.css('.item > .description h3.title > a'));
     return webdriver.promise.filter(spans, function(span) {
         return span.getAttribute('href').then(function(value) {
             links.push(value);

@@ -116,7 +116,7 @@ function getContentPage(href) {
         });
 
         //хлебные крошки
-        driver.findElement(by.css('div.b-catalog-breadcrumbs')).getText().then(function(value) {
+        driver.findElement(by.css('div.breadcrumbs')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.breadcrumbs = value;
         }, function(err) {
@@ -271,7 +271,7 @@ getContentAll().then(function(value) {
     logger.error(err);
 });
 
-/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_50_m_210_et._959347400';
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_34_m_810_et._836163816';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     getContentPage(uuu).then(function() {

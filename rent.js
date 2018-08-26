@@ -147,7 +147,7 @@ function getContentPage(href) {
         driver.get(url_mobile);
 
         //цена
-        driver.findElement(by.css('.price-value')).getText().then(function(value) {
+        driver.findElement(by.css('div[data-marker="item-description/price"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.price = value;
         }, function(err) {
@@ -157,13 +157,13 @@ function getContentPage(href) {
         });
 
         //номер телефона
-        driver.findElement(by.css('.action-show-number')).click().then(null, function(err) { 
+/*        driver.findElement(by.css('.action-show-number')).click().then(null, function(err) { 
         	logger.error(err);
         	takeScreenshot();
         	reject(err);
         });
-        driver.sleep(settings.sleep_delay);
-        driver.findElement(by.css('.action-show-number')).getText().then(function(value) {
+        driver.sleep(settings.sleep_delay);*/
+        driver.findElement(by.css('a[href^="tel:"]')).getAttribute('href').then(function(value) {
             logger.debug('section_txt: ' + value);
             data.number = value;
         }, function(err) {
@@ -271,7 +271,7 @@ getContentAll().then(function(value) {
     logger.error(err);
 });
 
-/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_34_m_810_et._836163816';
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_33_m_1516_et._1502657061';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     getContentPage(uuu).then(function() {

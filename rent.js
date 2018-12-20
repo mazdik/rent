@@ -147,7 +147,7 @@ function getContentPage(href) {
         driver.get(url_mobile);
 
         //цена
-        driver.findElement(by.css('div[data-marker="item-description/price"]')).getText().then(function(value) {
+        driver.findElement(by.css('span[data-marker="item-description/price"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.price = value;
         }, function(err) {

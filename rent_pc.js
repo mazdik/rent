@@ -1,5 +1,6 @@
 var webdriver = require('selenium-webdriver'),
     by = webdriver.By,
+    until = webdriver.until,
     chrome = require('selenium-webdriver/chrome'),
     firefox = require('selenium-webdriver/firefox');
 
@@ -10,7 +11,7 @@ var db = require('./mysql');
 var promiseLimit = require('promise-limit');
 var fs = require('fs');
 
-var userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1';
+var userAgent = 'Mozilla/5.0 (Windows NT 6.1; WOW64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/37.0.2062.120 Safari/537.36';
 
 //setup custom Chrome capability
 var chromedriver_exe = require('chromedriver').path;
@@ -42,7 +43,7 @@ let count_saves = 0;
 let count_links = 0;
 
 function createUrl() {
-    let host = new Buffer.from("YXZpdG8", 'base64').toString();
+    let host = new Buffer("YXZpdG8", 'base64').toString();
     let url = "https://www." + host + ".ru/" + settings.city + "/" + settings.category + "/" + settings.oper;
     if (settings.object_type) {
         url = url + '/' + settings.object_type;
@@ -57,16 +58,35 @@ function createUrl() {
     return url;
 }
 
+function pagiCount(url) {
+    return new webdriver.promise.Promise(function(resolve, reject) {
+        driver.get(url);
+        //пагинатор
+        return driver.findElement(by.css("div.pagination-pages > a.pagination-page:last-child"))
+            .getAttribute('href').then(function(value) {
+                //logger.debug('section_txt: ' + value);
+                let count = value.match(/p=\d{1,4}/);
+                count = count[0].replace(/[^0-9]/g, '');
+                logger.debug('pagi_count: ' + count);
+                resolve(count);
+            }, function(err) {
+                reject(err);
+            });
+    });
+}
+
 function getContentPage(href) {
     return new webdriver.promise.Promise(function(resolve, reject) {
-
+        let url = href;
         let url_mobile = href.replace(/www/, 'm');
-        let data = {href};
+        let data = {};
+        data.href = href;
 
-        driver.get(url_mobile);
+        //Открываем обычную версию сайта
+        driver.get(url);
 
         //заголовок
-        driver.findElement(by.css('[data-marker="item-description/title"]')).getText().then(function(value) {
+        driver.findElement(by.css('.title-info-title')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.title = value;
         }, function(err) {
@@ -76,7 +96,7 @@ function getContentPage(href) {
         });
 
         //адрес
-        driver.findElement(by.css('[data-marker="delivery/location"]')).getText().then(function(value) {
+        driver.findElement(by.css(".item-map-address[itemprop='address']")).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.address = value;
         }, function(err) {
@@ -86,8 +106,8 @@ function getContentPage(href) {
         });
 
         //описание
-        driver.findElement(by.css('[data-marker="item-description/text"]')).getText().then(function(value) {
-            logger.debug('section_txt: ' + value);
+        driver.findElement(by.css('.item-description')).getText().then(function(value) {
+            //logger.debug('section_txt: ' + value);
             data.description = value;
         }, function(err) {
             if (err.state) {
@@ -96,7 +116,7 @@ function getContentPage(href) {
         });
 
         //хлебные крошки
-        driver.findElement(by.css('[data-marker="item-properties-item(0)/description"]')).getText().then(function(value) {
+        driver.findElement(by.css('div.breadcrumbs')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.breadcrumbs = value;
         }, function(err) {
@@ -107,10 +127,10 @@ function getContentPage(href) {
 
         //картинки
         let images = [];
-        let spans = driver.findElements(webdriver.By.css('[data-marker="image-gallery"] img'));
+        let spans = driver.findElements(webdriver.By.css('.gallery-extended-img-frame'));
         webdriver.promise.filter(spans, function(span) {
-            return span.getAttribute('src').then(function(value) {
-                images.push(value);
+            return span.getAttribute('data-url').then(function(value) {
+                images.push('https:' + value);
                 return true;
             });
         }).then(function(filteredSpans) {
@@ -118,13 +138,16 @@ function getContentPage(href) {
             if(settings.limit_images && settings.limit_images > 0) {
                 data.images = images.slice(0, settings.limit_images);
             }
-            data.images .forEach(function(elem, index) {
+            data.images .forEach(function(elem, index, array) {
                 logger.debug(index + ": " + elem);
             });
         });
 
+        //Открываем мобилнаую версию сайта
+        driver.get(url_mobile);
+
         //цена
-        driver.findElement(by.css('[data-marker="item-description/price"]')).getText().then(function(value) {
+        driver.findElement(by.css('span[data-marker="item-description/price"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.price = value;
         }, function(err) {
@@ -133,6 +156,13 @@ function getContentPage(href) {
             }
         });
 
+        //номер телефона
+/*        driver.findElement(by.css('.action-show-number')).click().then(null, function(err) { 
+        	logger.error(err);
+        	takeScreenshot();
+        	reject(err);
+        });
+        driver.sleep(settings.sleep_delay);*/
         driver.findElement(by.css('a[href^="tel:"]')).getAttribute('href').then(function(value) {
             logger.debug('section_txt: ' + value);
             data.number = value;
@@ -165,7 +195,7 @@ function getContentList(url) {
     let links = [];
     let limit = promiseLimit(1);
     driver.get(url);
-    let spans = driver.findElements(webdriver.By.css('[data-marker="item/link"]'));
+    let spans = driver.findElements(webdriver.By.css('.item > .description h3.title > a'));
     return webdriver.promise.filter(spans, function(span) {
         return span.getAttribute('href').then(function(value) {
             links.push(value);
@@ -197,7 +227,42 @@ function getContentList(url) {
     });
 }
 
-getContentList(createUrl()).then(function(value) {
+function getContentAll() {
+    let url = createUrl();
+    let cnt = 0;
+    let links = [];
+    let limit = promiseLimit(1);
+    return pagiCount(url).then(function(value) {
+        cnt = value;
+        let limit_pages = (settings.limit_pages == 0) ? cnt : settings.limit_pages;
+        for (let index = 1; index <= limit_pages; index++) {
+            links.push(url + '&p=' + index);
+            logger.debug('url_list: ' + url + '&p=' + index);
+        }
+
+        return Promise.all(links.map(function(link) {
+            return limit(function() {
+                return new Promise(function(resolve, reject) {
+                    return getContentList(link).then(function() {
+                        resolve('finish');
+                    });
+                });
+            });
+        }));
+    }, function(err) {
+        if (err.state) {
+            logger.error(err);
+        }
+        logger.debug('url_list: ' + url);
+        return new Promise(function(resolve, reject) {
+            return getContentList(url).then(function() {
+                resolve('finish');
+            });
+        });
+    });
+}
+
+getContentAll().then(function(value) {
     logger.debug(value);
     logger.debug('Всего: ' + count_links + ' Из них спарсено: ' + count_parse + ' Из них сохранено: ' + count_saves);
     driver.quit();
@@ -206,12 +271,18 @@ getContentList(createUrl()).then(function(value) {
     logger.error(err);
 });
 
-/*
-let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_33_m_1516_et._1502657061';
+/*let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_33_m_1516_et._1502657061';
 db.isNotProcessed(uuu).then(function(value) {
     logger.debug('isNotProcessed: ' + value);
     getContentPage(uuu).then(function() {
         logger.debug('sss');
     });
+});*/
+
+/*let url = createUrl();
+pagiCount(url).then(function(value) {
+    logger.debug(value);
+}, function(err) {
+    logger.error(err);
 });
 */

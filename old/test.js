@@ -1,6 +1,20 @@
-var db = require('./mysql');
-var im = require('./image');
+const db = require('./mysql');
+const im = require('./image');
 const path = require('path');
+
+var capabilities = {
+    browserName: 'chrome',
+    'goog:chromeOptions': {
+        args: [
+            'headless',
+            'disable-gpu',
+            'disable-extensions'
+        ],
+        mobileEmulation: {
+            deviceName: 'Pixel 2'
+        }
+    }
+};
 
 let post = {
     alias: '123',

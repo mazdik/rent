@@ -1,8 +1,7 @@
-var settings = require('./settings.json');
-var logger = require('./logger');
-var fs = require('fs');
-var gm = require('gm').subClass({ imageMagick: true });
-var request = require('request');
+const settings = require('./settings.json');
+const logger = require('./logger');
+const gm = require('gm').subClass({ imageMagick: true });
+const request = require('request');
 const path = require('path');
 
 const dir = settings.images_dir;

@@ -1,8 +1,8 @@
-var mysql = require('mysql');
-var settings = require('./settings.json');
-var logger = require('./logger');
+const mysql = require('mysql');
+const settings = require('./settings.json');
+const logger = require('./logger');
 
-var pool = mysql.createPool({
+const pool = mysql.createPool({
     connectionLimit: settings.db_connlimit,
     host: settings.db_host,
     user: settings.db_user,

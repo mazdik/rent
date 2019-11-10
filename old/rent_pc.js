@@ -185,7 +185,7 @@ function getContentPage(href) {
 function takeScreenshot() {
     driver.takeScreenshot().then(function(data){
 	   var base64Data = data.replace(/^data:image\/png;base64,/,"")
-	   fs.writeFile(__dirname + "/logs/screensho.png", base64Data, 'base64', function(err) {
+	   fs.writeFile(__dirname + "/logs/screenshot.png", base64Data, 'base64', function(err) {
 	        if(err) logger.error(err);
 	   });
 	});

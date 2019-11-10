@@ -1,7 +1,7 @@
-var settings = require('./settings.json');
-var logger = require('./logger');
-var db = require('./mysql');
-var im = require('./image');
+const settings = require('./settings.json');
+const logger = require('./logger');
+const db = require('./mysql');
+const im = require('./image');
 
 module.exports = {
 

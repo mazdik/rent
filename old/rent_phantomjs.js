@@ -1,39 +1,48 @@
-const webdriver = require('selenium-webdriver');
-const chrome = require('selenium-webdriver/chrome');
-const chromium = require('chromium-version');
-require('chromedriver');
-const by = webdriver.By;
+var webdriver = require('selenium-webdriver'),
+    by = webdriver.By,
+    chrome = require('selenium-webdriver/chrome'),
+    firefox = require('selenium-webdriver/firefox');
 
-const settings = require('./settings.json');
-const logger = require('./logger');
-const proc = require('./process');
-const db = require('./mysql');
-const promiseLimit = require('promise-limit');
-const fs = require('fs');
+var settings = require('./settings.json');
+var logger = require('./logger');
+var proc = require('./process');
+var db = require('./mysql');
+var promiseLimit = require('promise-limit');
+var fs = require('fs');
 
-let options = new chrome.Options();
-options.setChromeBinaryPath(chromium.path);
-options.addArguments('--headless');
-options.addArguments('--disable-gpu');
-options.addArguments('--disable-extensions');
-if(settings.proxy !== '') {
-    options.addArguments(`--proxy-server=${settings.proxy}`);
+var userAgent = 'Mozilla/5.0 (iPhone; CPU iPhone OS 11_0 like Mac OS X) AppleWebKit/604.1.38 (KHTML, like Gecko) Version/11.0 Mobile/15A372 Safari/604.1';
+
+//setup custom Chrome capability
+var chromedriver_exe = require('chromedriver').path;
+var customChrome = webdriver.Capabilities.chrome();
+customChrome.set("chrome.binary.path", chromedriver_exe);
+
+//setup custom phantomJS capability
+var phantomjs_exe = require('phantomjs-prebuilt').path;
+var customPhantom = webdriver.Capabilities.phantomjs();
+customPhantom.set("phantomjs.binary.path", phantomjs_exe);
+customPhantom.set("phantomjs.page.settings.userAgent", userAgent);
+customPhantom.set("phantomjs.page.settings.loadImages", false);
+customPhantom.set("phantomjs.page.settings.localToRemoteUrlAccessEnabled", true);
+if(settings.proxy !== "") {
+    customPhantom.set("phantomjs.cli.args",["--proxy="+settings.proxy,"--proxy-auth="+settings.proxyuserpwd,"--web-security=no","--ignore-ssl-errors=yes"]);
 }
-options.setMobileEmulation({deviceName: 'Pixel 2'});
-const driver = new webdriver.Builder()
-    .forBrowser('chrome')
-    .setChromeOptions(options)
-    .build();
+
+var driver;
+if (settings.chrome == 1) {
+    driver = new webdriver.Builder().withCapabilities(customChrome).build();
+} else if (settings.firefox == 1) {
+    driver = new webdriver.Builder().forBrowser('firefox').build();
+} else {
+    driver = new webdriver.Builder().withCapabilities(customPhantom).build();
+}
 
 let count_parse = 0;
 let count_saves = 0;
 let count_links = 0;
 
 function createUrl() {
-    let host = new Buffer.from('YXZpdG8', 'base64').toString();
-    if(settings.proxyuserpwd !== '') {
-        host = settings.proxyuserpwd + '@' + host;
-    }
+    let host = new Buffer.from("YXZpdG8", 'base64').toString();
     let url = "https://www." + host + ".ru/" + settings.city + "/" + settings.category + "/" + settings.oper;
     if (settings.object_type) {
         url = url + '/' + settings.object_type;
@@ -49,7 +58,7 @@ function createUrl() {
 }
 
 function getContentPage(href) {
-    return new Promise(function(resolve, reject) {
+    return new webdriver.promise.Promise(function(resolve, reject) {
 
         let url_mobile = href.replace(/www/, 'm');
         let data = {href};
@@ -57,7 +66,7 @@ function getContentPage(href) {
         driver.get(url_mobile);
 
         //заголовок
-        const p1 = driver.findElement(by.css('[data-marker="item-description/title"]')).getText().then(function(value) {
+        driver.findElement(by.css('[data-marker="item-description/title"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.title = value;
         }, function(err) {
@@ -67,7 +76,7 @@ function getContentPage(href) {
         });
 
         //адрес
-        const p2 = driver.findElement(by.css('[data-marker="delivery/location"]')).getText().then(function(value) {
+        driver.findElement(by.css('[data-marker="delivery/location"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.address = value;
         }, function(err) {
@@ -77,7 +86,7 @@ function getContentPage(href) {
         });
 
         //описание
-        const p3 = driver.findElement(by.css('[data-marker="item-description/text"]')).getText().then(function(value) {
+        driver.findElement(by.css('[data-marker="item-description/text"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.description = value;
         }, function(err) {
@@ -87,7 +96,7 @@ function getContentPage(href) {
         });
 
         //хлебные крошки
-        const p4 = driver.findElement(by.css('[data-marker="item-properties-item(0)/description"]')).getText().then(function(value) {
+        driver.findElement(by.css('[data-marker="item-properties-item(0)/description"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.breadcrumbs = value;
         }, function(err) {
@@ -98,8 +107,8 @@ function getContentPage(href) {
 
         //картинки
         let images = [];
-        let spans = driver.findElements(by.css('[data-marker="image-gallery"] img'));
-        const p5 = webdriver.promise.filter(spans, function(span) {
+        let spans = driver.findElements(webdriver.By.css('[data-marker="image-gallery"] img'));
+        webdriver.promise.filter(spans, function(span) {
             return span.getAttribute('src').then(function(value) {
                 images.push(value);
                 return true;
@@ -115,7 +124,7 @@ function getContentPage(href) {
         });
 
         //цена
-        const p6 = driver.findElement(by.css('[data-marker="item-description/price"]')).getText().then(function(value) {
+        driver.findElement(by.css('[data-marker="item-description/price"]')).getText().then(function(value) {
             logger.debug('section_txt: ' + value);
             data.price = value;
         }, function(err) {
@@ -124,25 +133,16 @@ function getContentPage(href) {
             }
         });
 
-        //номер телефона	
-        const p7 = driver.findElement(by.css('a[href^="tel:"]')).click().then(function() {
-            takeScreenshot();
-
-            return driver.findElement(by.css('[data-marker="phone-popup/phone-number"]')).getText().then(function(value) {
-                logger.debug('section_txt: ' + value);
-                data.number = value;
-            }, function(err) {
-                if (err.state) {
-                    logger.error(err);
-                }
-            });
-        }, function(err) { 	
-        	logger.error(err);	
-        	takeScreenshot();
-        	reject(err);	
+        driver.findElement(by.css('a[href^="tel:"]')).getAttribute('href').then(function(value) {
+            logger.debug('section_txt: ' + value);
+            data.number = value;
+        }, function(err) {
+            if (err.state) {
+                logger.error(err);
+            }
         });
 
-        return Promise.all([p1, p2, p3, p4, p5, p6, p7]).then(function(results) {
+        return webdriver.promise.all(href).then(function(results) {
             return proc.addContent(data).then(function(value) {
                 resolve(value);
             }, function(err) {
@@ -154,7 +154,7 @@ function getContentPage(href) {
 
 function takeScreenshot() {
     driver.takeScreenshot().then(function(data){
-	   const base64Data = data.replace(/^data:image\/png;base64,/,"")
+	   var base64Data = data.replace(/^data:image\/png;base64,/,"")
 	   fs.writeFile(__dirname + "/logs/screenshot.png", base64Data, 'base64', function(err) {
 	        if(err) logger.error(err);
 	   });
@@ -165,7 +165,7 @@ function getContentList(url) {
     let links = [];
     let limit = promiseLimit(1);
     driver.get(url);
-    let spans = driver.findElements(by.css('[data-marker="item/link"]'));
+    let spans = driver.findElements(webdriver.By.css('[data-marker="item/link"]'));
     return webdriver.promise.filter(spans, function(span) {
         return span.getAttribute('href').then(function(value) {
             links.push(value);
@@ -198,6 +198,7 @@ function getContentList(url) {
 }
 
 getContentList(createUrl()).then(function(value) {
+    logger.debug(value);
     logger.debug('Всего: ' + count_links + ' Из них спарсено: ' + count_parse + ' Из них сохранено: ' + count_saves);
     driver.quit();
     db.disconnect();
@@ -206,10 +207,11 @@ getContentList(createUrl()).then(function(value) {
 });
 
 /*
-let uuu = 'https://www.' + new Buffer('YXZpdG8', 'base64').toString() + '.ru/ufa/kvartiry/2-k_kvartira_47.2_m_210_et._1678889047';
-getContentPage(uuu).then(function() {
-    console.log('complete');
-    driver.quit();
-    process.exit();
+let uuu = 'https://www.' + new Buffer("YXZpdG8", 'base64').toString() + '.ru/ufa/kvartiry/1-k_kvartira_33_m_1516_et._1502657061';
+db.isNotProcessed(uuu).then(function(value) {
+    logger.debug('isNotProcessed: ' + value);
+    getContentPage(uuu).then(function() {
+        logger.debug('sss');
+    });
 });
 */
